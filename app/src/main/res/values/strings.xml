@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="action_sort">Sort by</string>
+    <string name="action_popular">Most popular</string>
+    <string name="action_rated">Highest Rated</string>
+    <string name="action_favorite">Favorite</string>
+    <string name="action_share">Share</string>
+    <string name="error">Internet connection not available</string>
+    <string name="detail_activity">Movie Detail</string>
+    <string name="chooser_title">Choose an app to see the trailer</string>
+    <string name="mark_favorite">mark as favorite</string>
+    <string name="unmark_favorite">unmark as favorite</string>
+    <string name="trailers_label">Trailers:</string>
+    <string name="reviews_label">Reviews:</string>
+</resources>
