@@ -229,7 +229,6 @@ public class DetailActivity extends AppCompatActivity implements TrailerAdapter.
                 plotView.setText(movie.getPlot());
 
                 //favourite
-                //TODO se si verificano errori nel toogle o se si fa troppo velocemente?
                 ToggleButton favoriteToggle = (ToggleButton) findViewById(R.id.detail_mark_favourite);
 
                 if(movie.isFavorite() && !favoriteToggle.isChecked())

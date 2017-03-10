@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <!-- TODO resource taken from https://www.iconexperience.com/o_collection/icons/?icon=media_play-->
     <ImageView
         android:id="@+id/media_play"
         android:layout_width="32dp"
