@@ -10,8 +10,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by v.dipaolo on 23/01/2017.
@@ -158,7 +163,16 @@ public class JsonUtils {
             long id = jsonObject.getLong("id");
             String path = jsonObject.getString("poster_path");
             String title = jsonObject.getString("title");
-            String releaseDate = jsonObject.getString("release_date");
+            String releaseDateRaw = jsonObject.getString("release_date");
+            String releaseDate;
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date date = sdf.parse(releaseDateRaw);
+                releaseDate = DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault())
+                        .format(date);
+            }catch (ParseException e){
+                releaseDate = "";
+            }
             double rating = jsonObject.getDouble("vote_average");
             String plot = jsonObject.getString("overview");
 

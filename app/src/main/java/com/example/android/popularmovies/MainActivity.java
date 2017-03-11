@@ -31,11 +31,12 @@ public class MainActivity extends AppCompatActivity
 
     private final static String TAG = "MainActivity";
     private final static int VISIBLE_THRESHOLD = 5;
-    private final static int RESULTS_PER_PAGE = 20;
     private final static int WIDTH_IMAGE = 185;
     public  final static String FAVORITE = "favorite";
     private  final static String SORTBY_KEY = "sortBy";
     private  final static String PAGE_KEY = "page";
+    private  final static String POSITION_KEY = "position";
+    private  final static String TOTAL_PAGES_KEY = "totalPages";
 
     private RecyclerView recyclerView;
     private PopularMovieAdapter adapter;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity
     private String sortBy = NetworkUtils.SORT_BY_POPULARITY;
     private int page = 1;
     private int previousPage = 1;
+    private int currentPosition = 1;
     private int totalPages;
 
     private static final int ID_FAVORITE_LOADER = 44;
@@ -73,15 +75,49 @@ public class MainActivity extends AppCompatActivity
         error = (TextView)findViewById(R.id.error_view);
         progressBar = (ProgressBar)findViewById(R.id.progress_view);
 
+        //load more items
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                GridLayoutManager layoutManager = (GridLayoutManager)recyclerView.getLayoutManager();
+
+                int totalItemCount = layoutManager.getItemCount();
+                int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+
+                if (sortBy!=FAVORITE && !isLoading && totalItemCount <= (lastVisibleItem + VISIBLE_THRESHOLD) &&
+                        page < totalPages) {
+                    isLoading = true;
+                    new Handler().post(new Runnable(){
+                        public void run(){
+                            loadMore = new LoaderAdapterAsyncTask();
+                            loadMore.execute();  //set a delayed load of data
+                        }
+                    });
+
+                }
+            }
+        });
+
         if(savedInstanceState!=null &&
                 savedInstanceState.containsKey(SORTBY_KEY) &&
-                savedInstanceState.containsKey(PAGE_KEY)){
+                savedInstanceState.containsKey(PAGE_KEY) &&
+                savedInstanceState.containsKey(POSITION_KEY) &&
+                savedInstanceState.containsKey(TOTAL_PAGES_KEY)){
             sortBy = savedInstanceState.getString(SORTBY_KEY);
             previousPage = savedInstanceState.getInt(PAGE_KEY);
+            currentPosition = savedInstanceState.getInt(POSITION_KEY);
+            totalPages = savedInstanceState.getInt(TOTAL_PAGES_KEY);
 
         }
         //adapter
-        new InitAdapterAsyncTask().execute();
+        if(sortBy==FAVORITE) {
+            getSupportLoaderManager().initLoader(ID_FAVORITE_LOADER, null, this);
+            isInit=false;
+        }
+        else
+            new InitAdapterAsyncTask().execute();
     }
 
     @Override
@@ -195,7 +231,7 @@ public class MainActivity extends AppCompatActivity
                         null,
                         null,
                         null,
-                        null);
+                        FavoriteContract.FavoriteEntry.COLUMN_TIMESTAMP);
 
             default:
                 throw new RuntimeException("Loader Not Implemented: " + id);
@@ -220,9 +256,18 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putString(SORTBY_KEY, sortBy);
-        int pageToRestore = page>previousPage?page:previousPage;
-        outState.putInt(PAGE_KEY, pageToRestore);
+        if(!isInit) {
+            int pageToRestore = page > previousPage ? page : previousPage;
+            GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+            int currentPos = currentPosition > 1 ?
+                    currentPosition : layoutManager.findFirstCompletelyVisibleItemPosition();
+            currentPos = currentPos == RecyclerView.NO_POSITION ?
+                    layoutManager.findFirstCompletelyVisibleItemPosition():currentPos;
+            outState.putString(SORTBY_KEY, sortBy);
+            outState.putInt(PAGE_KEY, pageToRestore);
+            outState.putInt(POSITION_KEY, currentPos);
+            outState.putInt(TOTAL_PAGES_KEY, totalPages);
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -264,31 +309,6 @@ public class MainActivity extends AppCompatActivity
                 //create adapter and set it in recycler view
                 adapter = new PopularMovieAdapter(movies, MainActivity.this);
                 recyclerView.setAdapter(adapter);
-
-                //load more items
-                recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-                    @Override
-                    public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                        super.onScrolled(recyclerView, dx, dy);
-
-                        GridLayoutManager layoutManager = (GridLayoutManager)recyclerView.getLayoutManager();
-
-                        int totalItemCount = layoutManager.getItemCount();
-                        int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
-
-                        if (sortBy!=FAVORITE && !isLoading && totalItemCount <= (lastVisibleItem + VISIBLE_THRESHOLD) &&
-                                page < totalPages) {
-                            isLoading = true;
-                            new Handler().post(new Runnable(){
-                                public void run(){
-                                    loadMore = new LoaderAdapterAsyncTask();
-                                    loadMore.execute();  //set a delayed load of data
-                                }
-                            });
-
-                        }
-                    }
-                });
 
                 //change orientation. Restore position
                 if(previousPage>page)
@@ -343,8 +363,8 @@ public class MainActivity extends AppCompatActivity
                         new LoaderAdapterAsyncTask().execute();
                     else {
                         previousPage=1;
-                        int position = RESULTS_PER_PAGE*(page-1);
-                        recyclerView.scrollToPosition(position);
+                        recyclerView.scrollToPosition(currentPosition);
+                        currentPosition=1;
                         showData();
                     }
 

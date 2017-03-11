@@ -39,6 +39,7 @@ public class FavoriteContract {
         public static final String COLUMN_REVIEW = "review";
         public static final String COLUMN_RELEASE = "release";
         public static final String COLUMN_PLOT = "plot";
+        public static final String COLUMN_TIMESTAMP = "timestamp";
 
         public static Uri buildFavoriteUriWithId(long id) {
             return CONTENT_URI.buildUpon()
