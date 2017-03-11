@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity
             int currentPos = currentPosition > 1 ?
                     currentPosition : layoutManager.findFirstCompletelyVisibleItemPosition();
             currentPos = currentPos == RecyclerView.NO_POSITION ?
-                    layoutManager.findFirstCompletelyVisibleItemPosition():currentPos;
+                    layoutManager.findFirstVisibleItemPosition():currentPos;
             outState.putString(SORTBY_KEY, sortBy);
             outState.putInt(PAGE_KEY, pageToRestore);
             outState.putInt(POSITION_KEY, currentPos);
@@ -363,7 +363,8 @@ public class MainActivity extends AppCompatActivity
                         new LoaderAdapterAsyncTask().execute();
                     else {
                         previousPage=1;
-                        recyclerView.scrollToPosition(currentPosition);
+                        GridLayoutManager layoutManager = (GridLayoutManager)recyclerView.getLayoutManager();
+                        layoutManager.scrollToPositionWithOffset(currentPosition,0);
                         currentPosition=1;
                         showData();
                     }
